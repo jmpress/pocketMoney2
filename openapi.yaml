@@ -1,0 +1,361 @@
+openapi: 3.0.1
+info:
+  title: pocketMoney2
+  version: 1.0.0
+  description: >-
+    A more feature-rich version of the og. An implementation of "envelope"
+    budgeting principals.
+paths:
+  /envelopes:
+    summary: Retrieves information on all existing envelopes
+    get:
+      summary: Retrieves a snapshot of all of the envelopes in the database.
+      description: ''
+      operationId: get_envelopes
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              examples:
+                sample GET response:
+                  value: >-
+                    [{"envelope_id":0,"envelope_name":"Salary","current_value":0,
+                    "budgeted_value":2000,"isincome":
+                    true},{"envelope_id":1,"envelope_name":"Rent","current_value":0,"budgeted_value":1000,"isincome":false}]
+        '400':
+          description: Invalid Parameter
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - envelopes
+  /updateenvelope/{id}:
+    summary: Updates the attributes of the envelope with id {id}.
+    put:
+      summary: Updates the attributes of the envelope with id {id}.
+      description: ''
+      operationId: put_updateenvelope
+      requestBody:
+        description: A new Envelope object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Envelope'
+      parameters:
+        - name: id
+          in: path
+          description: The envelope_id of the envelope.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              examples:
+                Successful POST returns the object that was added to the database.:
+                  value: >-
+                    {"envelope_id":3,"envelope_name":"Utilities","current_value":0,
+                    "budgeted_value":500,"isincome": false}
+        '400':
+          description: Invalid Parameter
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - envelopes
+  /newenvelope:
+    summary: Creates a new envelope with specified parameters.
+    post:
+      summary: Create a new envelope with specified parameters
+      description: ''
+      operationId: post_newenvelope
+      requestBody:
+        description: A new Envelope object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Envelope'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              examples:
+                Successful POST returns the object that was added to the database.:
+                  value: >-
+                    {"envelope_id":3,"envelope_name":"Utilities","current_value":0,
+                    "budgeted_value":500,"isincome": false}
+        '400':
+          description: Invalid Object
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid Object, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - envelopes
+  /deleteenvelope/{id}:
+    summary: Deletes the envelope with the id {id}.
+    delete:
+      summary: Deletes the envelope with the id {id}.
+      description: ''
+      operationId: delete_envelope
+      parameters:
+        - name: id
+          in: path
+          description: The name of the envelope.
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                A successful deletion request returns the deleted object:
+                  value: >-
+                    {"envelope_id":4,"envelope_name":"Luxuries","current_value":0,
+                    "budgeted_value":100,"isincome": false}
+        '400':
+          description: Invalid Parameter
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - envelopes
+  /transactions:
+    summary: Retrieves information on all existing transactions
+    get:
+      summary: Retrieves a snapshot of all of the transactions in the database.
+      description: ''
+      operationId: get_transactions
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              examples:
+                A successful GET request returns a list of all transactions:
+                  value: >-
+                    [{"transaction_id":0,"wd_envelope_id":1,"transaction_date":"2020-08-07","payment_recipient":"John
+                    Smith","payment_amount":
+                    50},{"transaction_id":1,"wd_envelope_id":3,"transaction_date":"2020-08-09","payment_recipient":"PGE","payment_amount":
+                    75}]
+        '400':
+          description: Invalid Parameter
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - transactions
+  /updatetransaction/{id}:
+    summary: Updates one or more attributes of the transaction with id {id}.
+    put:
+      summary: Update one or more attributes of the transaction with id {id}.
+      description: ''
+      operationId: put_updatetransaction
+      parameters:
+        - name: id
+          in: path
+          description: The id of the transaction.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              examples:
+                A successful PUT response returns the object that was edited.:
+                  value: >-
+                    {"transaction_id":0,"wd_envelope_id":1,"transaction_date":"2020-08-07","payment_recipient":"John
+                    Smith","payment_amount": 50}
+        '400':
+          description: ''
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - transactions
+  /newtransaction:
+    summary: Creates a new transaction with specified parameters.
+    post:
+      summary: Create a new transaction with specified parameters
+      description: ''
+      operationId: post_newtransaction
+      requestBody:
+        description: A new Transaction object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              examples:
+                A successful POST response returns the transaction object that was added.:
+                  value: >-
+                    {"transaction_id":0,"wd_envelope_id":1,"transaction_date":"2020-08-07","payment_recipient":"John
+                    Smith","payment_amount": 50}
+        '400':
+          description: ''
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - transactions
+  /deletetransaction/{id}:
+    summary: Deletes the transaction with the id {id}.
+    delete:
+      summary: Deletes the transaction with id {id}.
+      description: ''
+      operationId: delete_transaction
+      parameters:
+        - name: id
+          in: path
+          description: The id of the transaction.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              examples:
+                A successful DELETE response returns the object that was deleted.:
+                  value: >-
+                    {"transaction_id":0,"wd_envelope_id":1,"transaction_date":"2020-08-07","payment_recipient":"John
+                    Smith","payment_amount": 50}
+        '400':
+          description: ''
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                An invalid parameter will result in a 400 status.:
+                  value: Invalid parameter, please try again.
+        default:
+          description: Default error sample response
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                default response:
+                  value: >-
+                    There was an error of some kind that did not return an HTTP
+                    status.
+      tags:
+        - transactions
+components:
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        envelope_id:
+          type: integer
+        envelope_name:
+          type: string
+        current_value:
+          type: number
+        budgeted_value:
+          type: number
+        isincome:
+          type: boolean
+      xml:
+        name: Envelope
+    Transaction:
+      type: object
+      properties:
+        transaction_id:
+          type: integer
+        wd_envelope_id:
+          type: integer
+        transaction_date:
+          type: string
+        payment_recipient:
+          type: string
+        payment_amount:
+          type: number
+      xml:
+        name: Transaction
