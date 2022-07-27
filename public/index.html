@@ -5,13 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/css/style.css" rel="stylesheet"/>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <title>Pocket Money</title>
 </head>
 <body>
     <center>
     <h1>Pocket Money v2.0</h1>
     <h2>An implementation of envelope budgeting principles</h2>
-    <h3>Now with an actual back-end!</h3>
+    <h3>*Soon* with an actual back-end!</h3>
     <p>More details on these principles can be found <a href="https://www.thebalance.com/what-is-envelope-budgeting-1293682">here</a>.</p>
     </center>
     <hr>
@@ -19,7 +20,25 @@
     <hr>
     <p id="incomeDisplayArea">Income Envelopes display here</p>
     <p id="expenseDisplayArea">Expense Envelopes display Here</p>
-    <p id="buttonUIArea"></p>
+    <p id="buttonUIArea">
+        <div>
+            ID:<input id="newEnvelopeID" type = "number"> 
+            Name:<input id="newEnvelopeName" type="string">
+            Budget:<input id="newEnvelopeBudget" type="number">
+            Income?<input id="newIsIncome" type = "checkbox">
+            <button id="makeNewEnvelopeButton">Make a new Envelope</button>
+        </div>
+        <hr>
+        <div>
+            ID:<input id="newTransactionID" type = "number">| 
+            Name:<input id="newTransactionName" type="string">
+            Budget:<input id="newTransactionAmount" type="number">
+            Payee:<input id="newTransactionPayee" type = "string">
+            Date:<input id="newTransactionDate" type = "string">
+            <button id="makeNewTransactionButton">Record a new transaction</button>
+        </div>
+    </p>
+
     <hr>
     <p id="transactionDisplayArea">Transactions display here</p>
 

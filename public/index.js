@@ -1,20 +1,36 @@
-//const updateOneButton = document.getElementById("updateOneButton");
-//const makeNewButton= document.getElementById("makeNewButton");
-//const deleteOneButton= document.getElementById("deleteOneButton");
-//const targetEnvelopeName = document.getElementById("targetEnvelopeName");
-//const targetEnvelopeBudget = document.getElementById("targetEnvelopeBudget");
-const expenseDisplayArea = document.getElementById("expenseDisplayArea");
-const incomeDisplayArea = document.getElementById("incomeDisplayArea");
-const errorDisplayArea = document.getElementById("errorDisplayArea");
-const transactionDisplayArea = document.getElementById("transactionDisplayArea");
-const buttonUIArea = document.getElementById("buttonUIArea");
-let envelopes = [];
-let transactions = [];
+//Fetch variables
+let headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+};
 
+//Display Areas
+    const expenseDisplayArea = document.getElementById("expenseDisplayArea");
+    const incomeDisplayArea = document.getElementById("incomeDisplayArea");
+    const errorDisplayArea = document.getElementById("errorDisplayArea");
+    const transactionDisplayArea = document.getElementById("transactionDisplayArea");
+    const buttonUIArea = document.getElementById("buttonUIArea");
 
+//Button Assignment
+    //Envelopes
+    const makeNewEnvelopeButton = document.getElementById("makeNewEnvelopeButton");
 
-//Make a "get paid" button that adds a numerical value to each envelope based on factors
+    //Transactions
+    const makeNewTransactionButton = document.getElementById("makeNewTransactionButton")
 
+//Text Field Assignment
+    //Envelopes
+    const newEnvelopeID = document.getElementById("newEnvelopeID");
+    const newEnvelopeName = document.getElementById("newEnvelopeName")
+    const newEnvelopeBudget = document.getElementById("newEnvelopeBudget")
+    const newIsIncome = document.getElementById("newIsIncome")
+    //Transactions
+
+// Object collection arrays
+    let envelopes = [];
+    let transactions = [];
+
+// Functions to Get Envelopes and Transactions
 async function getAllEnvelopes(){
     const response = await fetch('/envelopes');
     if(response.ok){
@@ -24,28 +40,16 @@ async function getAllEnvelopes(){
     }
 };
 
-function displayUI(){
-    const newEnvelopeUI = `
-    <div>
-    ID:<input id="targetEnvelopeID" type = "number">| 
-    Name:<input id="targetEnvelopeName" type="string">
-    Budget:<input id="targetEnvelopeBudget" type="number">
-    Income?<input id=targetIsIncome" type = "checkbox" value ="Income">
-    <button id="makeNewEnvelopeButton">Make a new Envelope</button>
-    </div>`;
-    
-    const newTransactionUI = `
-    <div width=100%>
-    ID:<input id="newTransactionID" type = "number">| 
-    Name:<input id="newTransactionName" type="string">
-    Budget:<input id="newTransactionAmount" type="number">
-    Payee:<input id="newTransactionPayee" type = "string">
-    Date:<input id="newTransactionDate" type = "string">
-    <button id="makeNewTransactionButton">Record a new transaction</button>
-    </div>`;
-    buttonUIArea.innerHTML = newEnvelopeUI + '<hr>' + newTransactionUI;
-}
+async function getAllTransactions(){
+    const response = await fetch('/transactions');
+    if(response.ok){
+        transactions = await response.json();
+        displayAllTransactions();
+        errorDisplayArea.innerHTML = "Got";
+    }
+};
 
+//Display all Envelopes and Transactions
 function displayAllEnvelopes(){
     let displayIncomeEnvelopes = "Income<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th></tr>";
     let displayExpenseEnvelopes = "Expenses<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th></tr>";
@@ -61,19 +65,8 @@ function displayAllEnvelopes(){
     displayIncomeEnvelopes += "</table>";
     displayExpenseEnvelopes += "</table>";
     incomeDisplayArea.innerHTML=displayIncomeEnvelopes;
-    expenseDisplayArea.innerHTML=displayExpenseEnvelopes;
-    displayUI();
+    expenseDisplayArea.innerHTML=displayExpenseEnvelopes;   
 }
-
-
-async function getAllTransactions(){
-    const response = await fetch('/transactions');
-    if(response.ok){
-        transactions = await response.json();
-        displayAllTransactions();
-        errorDisplayArea.innerHTML = "Got";
-    }
-};
 
 function displayAllTransactions(){
     let displayTransactions = "<table><tr><th>Txn</th><th>Amount</th><th>From Env</th><th>Paid to</th><th>Date</th></tr>";
@@ -82,9 +75,37 @@ function displayAllTransactions(){
         displayTransactions = displayTransactions + `<tr><div id="transaction${transaction.transaction_id}"><td>${transaction.transaction_id}</td><td>${transaction.payment_amount}</td><td>${transaction.wd_envelope_id}</td><td>${transaction.payment_recipient}</td><td>${transaction.transaction_date}</td></tr>`;
     });
     displayTransactions += '</table>';
-    transactionDisplayArea.innerHTML=displayTransactions;
-   
+    transactionDisplayArea.innerHTML=displayTransactions;   
 }
+
+//Fetch and display initial data from server.
+    getAllEnvelopes();
+    displayAllEnvelopes();
+    getAllTransactions();
+    displayAllTransactions();
+
+//Event Listeners
+
+makeNewEnvelopeButton.addEventListener('click', async () =>{
+    const newEnvelope = {
+        envelope_id: newEnvelopeID.value,
+        envelope_name: newEnvelopeName.value,
+        current_value: 0,
+        budgeted_value: newEnvelopeBudget.value,
+        isincome: newIsIncome.checked
+    };
+    console.log(newEnvelope);
+    const response = await fetch(`/envelopes`, {method: 'POST', headers: headers, body: JSON.stringify(newEnvelope)});
+    if(response.ok){
+        errorDisplayArea.innerHTML = "Added!"
+        envelopes = await response.json();
+        displayAllEnvelopes();
+    }
+    displayAllEnvelopes();
+    //Using input data from targetEnvelopeName and targetEnvelopeBudget, make a POST request
+    //to create a new envelope object and add it to the array.
+    
+});
 
 
 /*
@@ -100,18 +121,6 @@ updateOneButton.addEventListener('click', async () =>{
     }
 });
 
-makeNewButton.addEventListener('click', async () =>{
-    const newEnvelope = targetEnvelopeName.value;
-    const newBudget = targetEnvelopeBudget.value;
-    const response = await fetch(`/envelopes?name=${newEnvelope}&value=${newBudget}`, {method: 'POST'});
-    if(response.ok){
-        errorDisplayArea.innerHTML = "Added!"
-        envelopes = await response.json();
-        displayAllEnvelopes();
-    }
-    //Using input data from targetEnvelopeName and targetEnvelopeBudget, make a POST request
-    //to create a new envelope object and add it to the array.
-});
 
 deleteOneButton.addEventListener('click', async () =>{
     const targetEnvelope = targetEnvelopeName.value;
@@ -128,7 +137,3 @@ deleteOneButton.addEventListener('click', async () =>{
 });
 */
 
-getAllEnvelopes();
-displayAllEnvelopes();
-getAllTransactions();
-displayAllTransactions();

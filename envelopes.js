@@ -37,38 +37,52 @@ const envelopes = [
 */
 
 //Checks the validity of an envelope
+//Works for proper values - needs testing for incorrect/missing values
 function isValidEnvelope(req, res, next){
-    req.targetLabel = req.query.name;
-    req.targetBudget = req.query.value;
-    let targetIndex = -1;
+    console.log("made it to validation beginning");
+    req.envelopeID = req.body.envelope_id;
+
+    req.envelopeName = req.body.envelope_name;
+    req.envelopeCurrentValue = req.body.current_value;
+    req.envelopeBudgetedValue = req.body.budgeted_value
+    req.isIncome = req.body.isincome;
+    console.log("made it to validation post variables");
+    //What's the actual logic to validate an envelope object
+
+    //Assume true:
+    req.isValid = true;
+
+    //Make sure budget > 0
+    if(req.envelopeBudgetdValue<=0){
+        req.isValid = false;
+    }
+
+    //make sure isincome has a value
+    if(req.isIncome === undefined){req.isValid = false;}
+
+    //Make sure the ID isn't already taken
+    //Make sure the name isn't aleady take
     for(let i = 0; i < envelopes.length; i++){
-        if(envelopes[i].name === req.targetLabel){
-            targetIndex = i;
+        if(envelopes[i].envelope_id === req.envelopeID || envelopes[i].envelope_name === req.envelopeName){
+            req.isValid = false;
         }
     }
-    req.index = targetIndex;
+    console.log(`made it to validation end: isValid = ${req.isValid}`);
     next();
 }
 
-
+//Works
 envRouter.get('/', (req, res, next) => {
     res.status(200).send(envelopes);
 });
 
 envRouter.post('/', isValidEnvelope, (req, res, next) => {
-    if(req.index !== -1 || req.targetBudget < 0){
+    console.log("made it to post-validation, start of POST");
+    if(!req.isValid){
         res.status(400).send();
-    } else if(req.targetLabel && req.targetBudget){
-        const newEnvelope = {
-            envelope_name: req.targetLabel,
-            current_value: 0,
-            budgeted_value: req.targetBudget,
-            isincome: false
-        }
-        envelopes.push(newEnvelope);
+    } else{    
+        envelopes.push(req.body);
         res.status(201).send(envelopes);
-    } else {
-        res.status().send();
     }
 });
 
