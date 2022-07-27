@@ -5,21 +5,21 @@ const envelopes = [
     {
         envelope_id: 0,
         envelope_name: 'Salary',
-        current_value: 0,
+        current_value: 2000,
         budgeted_value: 2000,
         isincome: true
     },
     {
         envelope_id: 1,
         envelope_name: 'Rent',
-        current_value: 0,
+        current_value: 1000,
         budgeted_value: 1000,
         isincome: false
     },
     {
         envelope_id: 2,
         envelope_name: 'Food',
-        current_value: 0,
+        current_value: 500,
         budgeted_value: 500,
         isincome: false
     }

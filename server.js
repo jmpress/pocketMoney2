@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const envRouter = require('./envelopes.js');
+const txnRouter = require('./transactions.js');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -25,6 +26,7 @@ app.use(express.static(path.join(_dirname + 'public')));
 
 // middleware for envelope handling
 app.use('/envelopes', envRouter);
+app.use('/transactions', txnRouter);
 
 app.get('/', (req, res, next) => {
     res.sendFile(path.join(_dirname + 'public/index.html'));
