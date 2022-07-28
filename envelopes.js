@@ -39,35 +39,32 @@ const envelopes = [
 //Checks the validity of an envelope
 //Works for proper values - needs testing for incorrect/missing values
 function isValidEnvelope(req, res, next){
-    console.log("made it to validation beginning");
     req.envelopeID = req.body.envelope_id;
-
     req.envelopeName = req.body.envelope_name;
     req.envelopeCurrentValue = req.body.current_value;
     req.envelopeBudgetedValue = req.body.budgeted_value
     req.isIncome = req.body.isincome;
-    console.log("made it to validation post variables");
     //What's the actual logic to validate an envelope object
-
     //Assume true:
-    req.isValid = true;
-
+        req.isValid = true;
     //Make sure budget > 0
-    if(req.envelopeBudgetdValue<=0){
-        req.isValid = false;
-    }
+        if(req.envelopeBudgetedValue<=0){
+            req.isValid = false;
+            req.validReason = 'Budgeted amount must be a positive number.'
+        }
 
     //make sure isincome has a value
-    if(req.isIncome === undefined){req.isValid = false;}
+        if(req.isIncome === undefined){req.isValid = false;req.validReason='Highly Unlikely'}
 
     //Make sure the ID isn't already taken
-    //Make sure the name isn't aleady take
-    for(let i = 0; i < envelopes.length; i++){
-        if(envelopes[i].envelope_id === req.envelopeID || envelopes[i].envelope_name === req.envelopeName){
-            req.isValid = false;
+    //Make sure the name isn't aleady taken
+        for(let i = 0; i < envelopes.length; i++){
+            if(envelopes[i].envelope_id === req.envelopeID || envelopes[i].envelope_name === req.envelopeName){
+                req.isValid = false;
+                req.validReason = 'ID or name already taken.'
+            }
         }
-    }
-    console.log(`made it to validation end: isValid = ${req.isValid}`);
+    //All done. If there's no reason for it to be false, isValid will still be true from instantiation.
     next();
 }
 
@@ -77,9 +74,8 @@ envRouter.get('/', (req, res, next) => {
 });
 
 envRouter.post('/', isValidEnvelope, (req, res, next) => {
-    console.log("made it to post-validation, start of POST");
     if(!req.isValid){
-        res.status(400).send();
+        res.status(400).send(req.validReason);
     } else{    
         envelopes.push(req.body);
         res.status(201).send(envelopes);
@@ -103,11 +99,19 @@ envRouter.put('/', isValidEnvelope, (req, res, next) => {
 });
 
 envRouter.delete('/', isValidEnvelope, (req, res, next) => {
-    if(req.index === -1){
-        res.status(404).send();
+    if(!req.isValid){
+        res.status(404).send(req.validReason);
     } else {
         //otherwise, remove it from the array (splice)
-        envelopes.splice(req.index, 1);
+        let deletionTargetIndex = -1;
+        for(let i = 0; i < envelopes.length; i++){
+            if(envelopes[i].envelope_id === req.envelopeID){
+                deletionTargetIndex = i;
+                break;
+            }
+        }        
+
+        envelopes.splice(deletionTargetIndex, 1);
         res.status(200).send(envelopes);    
     }
 });

@@ -25,6 +25,11 @@ let headers = {
     const newEnvelopeBudget = document.getElementById("newEnvelopeBudget")
     const newIsIncome = document.getElementById("newIsIncome")
     //Transactions
+    const newTransactionID = document.getElementById("newTransactionID");
+    const newTransactionEnvelope = document.getElementById("newTransactionEnvelope");
+    const newTransactionAmount = document.getElementById("newTransactionAmount");
+    const newTransactionPayee = document.getElementById("newTransactionPayee");
+    const newTransactionDate = document.getElementById("newTransactionDate");
 
 // Object collection arrays
     let envelopes = [];
@@ -36,7 +41,6 @@ async function getAllEnvelopes(){
     if(response.ok){
         envelopes = await response.json();
         displayAllEnvelopes();
-        errorDisplayArea.innerHTML = "Got";
     }
 };
 
@@ -45,20 +49,20 @@ async function getAllTransactions(){
     if(response.ok){
         transactions = await response.json();
         displayAllTransactions();
-        errorDisplayArea.innerHTML = "Got";
     }
 };
 
 //Display all Envelopes and Transactions
 function displayAllEnvelopes(){
-    let displayIncomeEnvelopes = "Income<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th></tr>";
+    let displayIncomeEnvelopes = "Income<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th><th>Delete</th></tr>";
     let displayExpenseEnvelopes = "Expenses<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th></tr>";
     
     envelopes.forEach(envelope => {
         if(envelope.isincome){
-            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td>`;
+            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><button id="deleteEnvelopeButton" value=${envelope.envelope_id}>X</button></td>`;
+
         } else {
-            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td>`;
+            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><button id="deleteEnvelopeButton" value=${envelope.envelope_id}>X</button></td>`;
         }
         
     });
@@ -86,6 +90,7 @@ function displayAllTransactions(){
 
 //Event Listeners
 
+//Envelopes
 makeNewEnvelopeButton.addEventListener('click', async () =>{
     const newEnvelope = {
         envelope_id: newEnvelopeID.value,
@@ -94,19 +99,51 @@ makeNewEnvelopeButton.addEventListener('click', async () =>{
         budgeted_value: newEnvelopeBudget.value,
         isincome: newIsIncome.checked
     };
-    console.log(newEnvelope);
     const response = await fetch(`/envelopes`, {method: 'POST', headers: headers, body: JSON.stringify(newEnvelope)});
     if(response.ok){
         errorDisplayArea.innerHTML = "Added!"
         envelopes = await response.json();
         displayAllEnvelopes();
+    } else {
+        errorDisplayArea.innerHTML = await response.text();
     }
-    displayAllEnvelopes();
-    //Using input data from targetEnvelopeName and targetEnvelopeBudget, make a POST request
-    //to create a new envelope object and add it to the array.
-    
 });
 
+async function deleteEnvelope(){
+    const targetID = this.value
+    console.log(targetID);  
+    const response = await fetch(`/envelopes?id=${targetID}`, {method: 'DELETE'});
+    
+    console.log(response.ok);
+    if(response.ok){
+        errorDisplayArea.innerHTML = "Deleted!"
+        envelopes = await response.json();
+        displayAllEnvelopes();     
+    } else {
+        errorDisplayArea.innerHTML = await response.text();
+    }
+}
+
+deleteEnvelopeButton.addEventListener('click', deleteEnvelope);
+
+//Transactions
+makeNewTransactionButton.addEventListener('click', async () =>{
+    const newTransaction = {
+        transaction_id: newTransactionID.value,
+        wd_envelope_id: newTransactionEnvelope.value,
+        transaction_date: newTransactionDate.value,
+        payment_recipient: newTransactionPayee.value,
+        payment_amount: newTransactionAmount.value        
+    };
+    const response = await fetch(`/transactions`, {method: 'POST', headers: headers, body: JSON.stringify(newTransaction)});
+    if(response.ok){
+        errorDisplayArea.innerHTML = "Added!"
+        transactions = await response.json();
+        displayAllTransactions();
+    } else {
+        errorDisplayArea.innerHTML = await response.text();
+    }
+});
 
 /*
 updateOneButton.addEventListener('click', async () =>{
@@ -122,18 +159,6 @@ updateOneButton.addEventListener('click', async () =>{
 });
 
 
-deleteOneButton.addEventListener('click', async () =>{
-    const targetEnvelope = targetEnvelopeName.value;
-    const targetBudget = targetEnvelopeBudget.value;
-    const response = await fetch(`/envelopes?name=${targetEnvelope}&value=${targetBudget}`, {method: 'DELETE'});
-    console.log(response.ok);
-    if(response.ok){
-        errorDisplayArea.innerHTML = "Deleted!"
-        envelopes = await response.json();
-        console.log(envelopes);
-        displayAllEnvelopes();     
-    }
-   
-});
+
 */
 
