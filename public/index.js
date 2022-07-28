@@ -1,3 +1,19 @@
+/*
+Problems:
+* deletion interface: how to dynamically create the interactable aspect and still attach event handlers that read the target ID?
+
+* When you add a transaction, it should subtract the value from the appropriate envelope.
+* Adding a transaction is how you update the current_value of an envelope.
+* Any other envelope attributes that need to be changed, must delete envelope and recreate it?
+
+ADMIN MODE
+* A toggle with a simple password that unhides a bunch of UI elements for more specific editing.
+* When you delete an envelope, what happens to all the transactions that relied on that envelope?
+* When you delete a transaction, should it add that value back in? Probably
+* ADMIN MODE could allow for envelope attribute updating
+
+*/
+
 //Fetch variables
 let headers = {
     'Accept': 'application/json',
@@ -55,14 +71,13 @@ async function getAllTransactions(){
 //Display all Envelopes and Transactions
 function displayAllEnvelopes(){
     let displayIncomeEnvelopes = "Income<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th><th>Delete</th></tr>";
-    let displayExpenseEnvelopes = "Expenses<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th></tr>";
+    let displayExpenseEnvelopes = "Expenses<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th><th>Delete</th></tr>";
     
     envelopes.forEach(envelope => {
         if(envelope.isincome){
-            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><button id="deleteEnvelopeButton" value=${envelope.envelope_id}>X</button></td>`;
-
+            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" type = "checkbox" value="${envelope.envelope_id}"></td>`;
         } else {
-            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><button id="deleteEnvelopeButton" value=${envelope.envelope_id}>X</button></td>`;
+            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" type = "checkbox" value="${envelope.envelope_id}"></td>`;
         }
         
     });
@@ -109,23 +124,6 @@ makeNewEnvelopeButton.addEventListener('click', async () =>{
     }
 });
 
-async function deleteEnvelope(){
-    const targetID = this.value
-    console.log(targetID);  
-    const response = await fetch(`/envelopes?id=${targetID}`, {method: 'DELETE'});
-    
-    console.log(response.ok);
-    if(response.ok){
-        errorDisplayArea.innerHTML = "Deleted!"
-        envelopes = await response.json();
-        displayAllEnvelopes();     
-    } else {
-        errorDisplayArea.innerHTML = await response.text();
-    }
-}
-
-deleteEnvelopeButton.addEventListener('click', deleteEnvelope);
-
 //Transactions
 makeNewTransactionButton.addEventListener('click', async () =>{
     const newTransaction = {
@@ -146,6 +144,22 @@ makeNewTransactionButton.addEventListener('click', async () =>{
 });
 
 /*
+async function deleteEnvelope(){
+    
+    console.log(this.value);  
+    const response = await fetch(`/envelopes?id=${this.value}`, {method: 'DELETE'});
+    
+    console.log(response.ok);
+    if(response.ok){
+        errorDisplayArea.innerHTML = "Deleted!"
+        envelopes = await response.json();
+        displayAllEnvelopes();     
+    } else {
+        errorDisplayArea.innerHTML = await response.text();
+    }
+}
+
+
 updateOneButton.addEventListener('click', async () =>{
     //Using input data from input fields, make a PUT request to update an envelope
     const updateEnvelope = targetEnvelopeName.value;

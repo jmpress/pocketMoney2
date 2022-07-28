@@ -1,4 +1,5 @@
 const express = require('express');
+const db = require('./db/db')
 const envRouter = express.Router();
 
 const envelopes = [
@@ -73,6 +74,7 @@ envRouter.get('/', (req, res, next) => {
     res.status(200).send(envelopes);
 });
 
+//Works
 envRouter.post('/', isValidEnvelope, (req, res, next) => {
     if(!req.isValid){
         res.status(400).send(req.validReason);
@@ -81,6 +83,38 @@ envRouter.post('/', isValidEnvelope, (req, res, next) => {
         res.status(201).send(envelopes);
     }
 });
+
+envRouter.delete('/:id', (req, res, next) => {
+    req.isValid = false;
+    req.validReason = 'Invalid Envelope ID';
+    for(let i = 0; i < envelopes.length; i++){
+        if(envelopes[i].envelope_id === req.envelopeID){
+            req.isValid = true;
+            req.validReason = null;
+            req.targetIndex = i;
+            break;
+        }
+    }
+    if(!req.isValid){
+        res.status(404).send(req.validReason);
+    } else {
+        //otherwise, remove it from the array (splice)        
+        envelopes.splice(req.targetIndex, 1);
+        res.status(200).send(envelopes);
+    }
+
+});
+
+envRouter.use((err, req, res, next) => {
+    console.log(err.message);
+    res.status(err.status).send(err.message);
+})
+
+module.exports = envRouter;
+
+
+/*
+//ADMIN MODE - redo this whole thing
 
 envRouter.put('/', isValidEnvelope, (req, res, next) => {
     if(req.index === -1){
@@ -97,28 +131,4 @@ envRouter.put('/', isValidEnvelope, (req, res, next) => {
         res.status(200).send(envelopes);
     }
 });
-
-envRouter.delete('/', isValidEnvelope, (req, res, next) => {
-    if(!req.isValid){
-        res.status(404).send(req.validReason);
-    } else {
-        //otherwise, remove it from the array (splice)
-        let deletionTargetIndex = -1;
-        for(let i = 0; i < envelopes.length; i++){
-            if(envelopes[i].envelope_id === req.envelopeID){
-                deletionTargetIndex = i;
-                break;
-            }
-        }        
-
-        envelopes.splice(deletionTargetIndex, 1);
-        res.status(200).send(envelopes);    
-    }
-});
-
-envRouter.use((err, req, res, next) => {
-    console.log(err.message);
-    res.status(err.status).send(err.message);
-})
-
-module.exports = envRouter;
+*/
