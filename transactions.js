@@ -1,31 +1,10 @@
 const express = require('express');
-const db = require('./db/db')
-const txnRouter = express.Router();
+const db = require('./db');
+const Router = require('express-promise-router');
+const txnRouter = new Router();
 
-const transactions = [
-    {
-        transaction_id: 0,
-        wd_envelope_id: 1,
-        transaction_date: '2020-09-01',
-        payment_recipient: 'Landlord',
-        payment_amount: 1000
-    },
-    {
-        transaction_id: 1,
-        wd_envelope_id: 2,
-        transaction_date: '2020-09-02',
-        payment_recipient: 'Fred',
-        payment_amount: 100
-    },
-    {
-        transaction_id: 2,
-        wd_envelope_id: 3,
-        transaction_date: '2020-09-02',
-        payment_recipient: 'PGE',
-        payment_amount: 60
-    },
-    
-];
+const transactions = [];
+
 /* Transaction object definition:
 {
     transaction_id: 0,
@@ -83,7 +62,12 @@ function isValidTransaction(req, res, next){
 }
 
 
-txnRouter.get('/', (req, res, next) => {
+txnRouter.get('/', async (req, res, next) => {
+    queryText = 'SELECT * FROM transactions;'
+    const {rows} = await db.query(queryText);
+    for(let i = 0; i < rows.length-1; i++){
+        transactions.push(rows[i]);
+    }
     res.status(200).send(transactions);
 });
 

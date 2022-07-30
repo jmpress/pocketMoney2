@@ -1,31 +1,10 @@
 const express = require('express');
-const db = require('./db/db')
-const envRouter = express.Router();
+const db = require('./db')
+const Router = require('express-promise-router');
+const envRouter = new Router();
 
-const envelopes = [
-    {
-        envelope_id: 0,
-        envelope_name: 'Salary',
-        current_value: 2000,
-        budgeted_value: 2000,
-        isincome: true
-    },
-    {
-        envelope_id: 1,
-        envelope_name: 'Rent',
-        current_value: 1000,
-        budgeted_value: 1000,
-        isincome: false
-    },
-    {
-        envelope_id: 2,
-        envelope_name: 'Food',
-        current_value: 500,
-        budgeted_value: 500,
-        isincome: false
-    }
+const envelopes = [];
 
-];
 /* Envelope object definition:
 {
     envelope_id: integer,  - the id number used to refer to the envelope
@@ -70,7 +49,13 @@ function isValidEnvelope(req, res, next){
 }
 
 //Works
-envRouter.get('/', (req, res, next) => {
+//Needs error handling
+envRouter.get('/', async (req, res, next) => {
+    queryText = 'SELECT * FROM envelopes;'
+    const {rows} = await db.query(queryText);
+    for(let i = 0; i < rows.length-1; i++){
+        envelopes.push(rows[i]);
+    }
     res.status(200).send(envelopes);
 });
 
