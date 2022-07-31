@@ -1,11 +1,12 @@
 const { Pool } = require('pg');
+require('dotenv').config();
 
 const pool = new Pool({
-    user: 'apiuser',
-    host: 'localhost',
-    database: 'pocket_money_2',
-    password: '020681',
-    port: 5432,
+    user: process.env.PMAPIUSER,
+    host: process.env.PMHOST,
+    database: process.env.PMDATABASE,
+    password: process.env.PMAPIUSERPW,
+    port: process.env.PMDBPORT,
 });
 
 module.exports = {

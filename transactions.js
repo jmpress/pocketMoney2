@@ -63,19 +63,36 @@ function isValidTransaction(req, res, next){
 
 
 txnRouter.get('/', async (req, res, next) => {
-    queryText = 'SELECT * FROM transactions;'
+    const queryText = 'SELECT * FROM transactions;'
+    let flag = true;
     const {rows} = await db.query(queryText);
-    for(let i = 0; i < rows.length-1; i++){
-        transactions.push(rows[i]);
+    for(let i = 0; i < rows.length; i++){
+        for(let j = 0; j < transactions.length; j++){
+            if(rows[i].transaction_id === transactions[j].transaction_id){
+                flag = false; 
+                break;
+            }
+        }
+        if(flag){
+            transactions.push(rows[i]);
+        }
     }
     res.status(200).send(transactions);
 });
 
-txnRouter.post('/', isValidTransaction, (req, res, next) => {
+txnRouter.post('/', isValidTransaction, async (req, res, next) => {
     if(!req.isValid){
         res.status(400).send(req.validReason);
     } else {
-        transactions.push(req.body);
+        const newT = req.body;
+        const newID = newT.transaction_id;
+        const newTarget = newT.wd_envelope_id;
+        const newDate = newT.transaction_date;
+        const newPayee = newT.payment_recipient;
+        const newAmount = newT.payment_amount;
+        const queryText = 'INSERT INTO transactions VALUES ($1, $2, $3, $4, $5);'
+        const result = await db.query(queryText, [newID, newTarget, newDate, newPayee, newAmount]);
+        transactions.push(newT);
         res.status(201).send(transactions);
     }
 });

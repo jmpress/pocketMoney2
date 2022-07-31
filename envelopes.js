@@ -51,24 +51,43 @@ function isValidEnvelope(req, res, next){
 //Works
 //Needs error handling
 envRouter.get('/', async (req, res, next) => {
-    queryText = 'SELECT * FROM envelopes;'
+    const queryText = 'SELECT * FROM envelopes;'
+    let flag = true;
     const {rows} = await db.query(queryText);
-    for(let i = 0; i < rows.length-1; i++){
-        envelopes.push(rows[i]);
+    for(let i = 0; i < rows.length; i++){
+        for(let j = 0; j < envelopes.length; j++){
+            if(rows[i].envelope_id === envelopes[j].envelope_id){
+                flag = false; 
+                break;
+            }
+        }
+        if(flag){
+            envelopes.push(rows[i]);
+        }
     }
     res.status(200).send(envelopes);
 });
 
 //Works
-envRouter.post('/', isValidEnvelope, (req, res, next) => {
+envRouter.post('/', isValidEnvelope, async (req, res, next) => {
     if(!req.isValid){
         res.status(400).send(req.validReason);
     } else{    
-        envelopes.push(req.body);
+        const newE = req.body;
+        const newID = newE.envelope_id;
+        const newName = newE.envelope_name;
+        const newValue = newE.current_value;
+        const newBudget = newE.budgeted_value;
+        const newIncomeCheck = newE.isincome;
+        const queryText = 'INSERT INTO envelopes VALUES ($1, $2, $3, $4, $5);'
+        const result = await db.query(queryText, [newID, newName, newValue, newBudget, newIncomeCheck]);
+        envelopes.push(newE);
         res.status(201).send(envelopes);
     }
 });
 
+//Needs some front-end work before I can test it.
+//Nothing here integrates with PSQL yet.
 envRouter.delete('/:id', (req, res, next) => {
     req.isValid = false;
     req.validReason = 'Invalid Envelope ID';
