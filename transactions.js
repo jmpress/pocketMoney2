@@ -64,18 +64,11 @@ function isValidTransaction(req, res, next){
 
 txnRouter.get('/', async (req, res, next) => {
     const queryText = 'SELECT * FROM transactions;'
-    let flag = true;
+    transactions.length = 0; //avoid checking for duplicates, just read them all again.
+    //Which is more expensive? The database query or the duplication check?
     const {rows} = await db.query(queryText);
     for(let i = 0; i < rows.length; i++){
-        for(let j = 0; j < transactions.length; j++){
-            if(rows[i].transaction_id === transactions[j].transaction_id){
-                flag = false; 
-                break;
-            }
-        }
-        if(flag){
             transactions.push(rows[i]);
-        }
     }
     res.status(200).send(transactions);
 });
@@ -90,11 +83,20 @@ txnRouter.post('/', isValidTransaction, async (req, res, next) => {
         const newDate = newT.transaction_date;
         const newPayee = newT.payment_recipient;
         const newAmount = newT.payment_amount;
+        
         const queryText = 'INSERT INTO transactions VALUES ($1, $2, $3, $4, $5);'
-        const result = await db.query(queryText, [newID, newTarget, newDate, newPayee, newAmount]);
+        await db.query(queryText, [newID, newTarget, newDate, newPayee, newAmount]);
+        
+        // A new transaction should also change the current_value of the envelope with id wd_envelope_id
+        const updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
+        await db.query(updateQuery, [newAmount, newTarget]);
+        
         transactions.push(newT);
         res.status(201).send(transactions);
     }
+
+    
+        
 });
 
 /* Do we even want PUT as an option? I don't want end user to be able to edit transactions directly. Admin should be able to. A future extension could introduce ADMIN MODE that allows more edits, but will also require more validation logic.

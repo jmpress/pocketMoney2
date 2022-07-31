@@ -138,6 +138,7 @@ makeNewTransactionButton.addEventListener('click', async () =>{
         errorDisplayArea.innerHTML = "Added!"
         transactions = await response.json();
         displayAllTransactions();
+        getAllEnvelopes();
     } else {
         errorDisplayArea.innerHTML = await response.text();
     }

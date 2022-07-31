@@ -52,18 +52,10 @@ function isValidEnvelope(req, res, next){
 //Needs error handling
 envRouter.get('/', async (req, res, next) => {
     const queryText = 'SELECT * FROM envelopes;'
-    let flag = true;
+    envelopes.length=0;
     const {rows} = await db.query(queryText);
     for(let i = 0; i < rows.length; i++){
-        for(let j = 0; j < envelopes.length; j++){
-            if(rows[i].envelope_id === envelopes[j].envelope_id){
-                flag = false; 
-                break;
-            }
-        }
-        if(flag){
-            envelopes.push(rows[i]);
-        }
+        envelopes.push(rows[i]);
     }
     res.status(200).send(envelopes);
 });
