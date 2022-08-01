@@ -150,6 +150,73 @@ txnRouter.delete('/:id', async (req, res, next) => {
                     updateQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
                 }
         await db.query(updateQuery, [changeAmount, affEnv]);
+            
+        res.status(200).send();
+    }
+});
+
+//PUT route to update values of a transaction
+//isValidTransaction middleware causes issues here, because here I need to use the case where ID numbers do match.
+txnRouter.put('/:id', async (req, res, next) => {
+    req.isValid = true; //kludge until I come up with another validation method.
+    if(!req.isValid){
+        console.log(req.validReason);
+        res.status(400).send(req.validReason);
+    } else {    
+        const newT = req.body;
+        
+        const newID = newT.transaction_id;
+        const newTarget = newT.wd_envelope_id;
+        const newDate = newT.transaction_date;
+        const newPayee = newT.payment_recipient;
+        const newAmount = newT.payment_amount;
+
+        const checkOld = 'SELECT * FROM transactions WHERE transaction_id = $1';
+        const { rows } = await db.query(checkOld, [newID]);
+        const oldT = rows[0]; //This object is the original version of the transaction in question from the database, for later use.
+        
+
+        //Query to update the transaction in question
+        const queryText = 'UPDATE transactions SET wd_envelope_id = $2, transaction_date = $3, payment_recipient = $4, payment_amount = $5 WHERE transaction_id = $1;'
+        await db.query(queryText, [newID, newTarget, newDate, newPayee, newAmount]);
+
+        //Handling balance changes between envelopes
+        if(oldT.wd_envelope_id != newTarget){
+        //different envelopes, two balance changes. This should also handle cases where the amount changes as well.
+            //First change old envelope back
+            const incomeCheck = 'SELECT isincome FROM envelopes WHERE envelope_id = $1';
+            
+            const rowsB = await db.query(incomeCheck, [oldT.wd_envelope_id]);
+            
+            const targetIsIncome = rowsB.rows[0].isincome;
+            
+            let updateQuery;
+            if(targetIsIncome){
+                updateQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
+            } else {
+                updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
+            }
+            
+            await db.query(updateQuery, [oldT.payment_amount, oldT.wd_envelope_id]);
+            //Second change new envelope to compensate
+            const incomeCheckB = 'SELECT isincome FROM envelopes WHERE envelope_id = $1';
+            
+            const rowsC = await db.query(incomeCheckB, [newTarget]);
+            
+            const targetIsIncomeB = rowsC.rows[0].isincome;
+            if(targetIsIncomeB){
+                updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
+            } else {
+                updateQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
+            }
+            await db.query(updateQuery, [newAmount, newTarget]);
+        } else if(oldT.payment_amount != newAmount){
+        //Case when envelope is the same, but amount changes.
+            //calculate difference
+            const diff = (oldT.payment_amount - newAmount);
+            //Query database and current_value = current_value - diff; or something to that effect
+            
+        }
 
         res.status(200).send();
     }

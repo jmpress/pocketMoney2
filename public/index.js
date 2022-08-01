@@ -30,8 +30,10 @@ let headers = {
 //Button Assignment
     //Envelopes
     const makeNewEnvelopeButton = document.getElementById("makeNewEnvelopeButton");
-    const deleteAnEnvelopeButton = document.getElementById("deleteAnEnvelopeButton")
-    const deleteTransactionButton = document.getElementById("deleteTransactionButton")
+    const deleteAnEnvelopeButton = document.getElementById("deleteAnEnvelopeButton");
+    const deleteTransactionButton = document.getElementById("deleteTransactionButton");
+    const updateEnvelopeValues = document.getElementById("updateEnvelopeValues");
+    const updateTransactionValues = document.getElementById("updateTransactionValues");
 
     //Transactions
     const makeNewTransactionButton = document.getElementById("makeNewTransactionButton")
@@ -156,6 +158,25 @@ async function deleteEnvelope(value){
     }
 }
 
+updateEnvelopeValues.addEventListener('click', async () =>{
+    //Using input data from input fields, make a PUT request to update an envelope
+    const value = newEnvelopeID.value;
+    const newEnvelope = {
+        envelope_id: newEnvelopeID.value,
+        envelope_name: newEnvelopeName.value,
+        current_value: null,
+        budgeted_value: newEnvelopeBudget.value,
+        isincome: newIsIncome.checked
+    };
+    const response = await fetch(`/envelopes/${value}`, {method: 'PUT', headers: headers, body: JSON.stringify(newEnvelope)});
+    if(response.ok){
+        //envelopes = await response.json();
+        errorDisplayArea.innerHTML = "Updated";
+        getAllEnvelopes();
+    }
+});
+
+
 
 //Transactions
 makeNewTransactionButton.addEventListener('click', async () =>{
@@ -207,21 +228,20 @@ async function deleteTransaction(value){
     }
 }
 
-/*
-
-updateOneButton.addEventListener('click', async () =>{
+updateTransactionValues.addEventListener('click', async () =>{
     //Using input data from input fields, make a PUT request to update an envelope
-    const updateEnvelope = targetEnvelopeName.value;
-    const updateMoney = targetEnvelopeBudget.value;
-    const response = await fetch(`/envelopes?name=${updateEnvelope}&value=${updateMoney}`, {method: 'PUT'});
+    const value = newTransactionID.value;
+    const newTransaction = {
+        transaction_id: newTransactionID.value,
+        wd_envelope_id: newTransactionEnvelope.value,
+        transaction_date: newTransactionDate.value,
+        payment_recipient: newTransactionPayee.value,
+        payment_amount: newTransactionAmount.value 
+    };
+    const response = await fetch(`/transactions/${value}`, {method: 'PUT', headers: headers, body: JSON.stringify(newTransaction)});
     if(response.ok){
-        envelopes = await response.json();
         errorDisplayArea.innerHTML = "Updated";
-        displayAllEnvelopes();
+        getAllTransactions();
+        getAllEnvelopes();
     }
 });
-
-
-
-*/
-

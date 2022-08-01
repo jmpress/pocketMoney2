@@ -98,6 +98,23 @@ envRouter.delete('/:id', async (req, res, next) => {
     }
 });
 
+//PUT route to update values of an envelope
+envRouter.put('/:id', isValidEnvelope, async (req, res, next) => {
+    if(!req.isValid){
+        res.status(400).send(req.validReason);
+    } else {    
+        const newE = req.body;
+        const newID = newE.envelope_id;
+        const newName = newE.envelope_name;
+        const newValue = newE.current_value;
+        const newBudget = newE.budgeted_value;
+        const newIncomeCheck = newE.isincome;
+        const queryText = 'UPDATE envelopes SET envelope_name = $2, budgeted_value = $3, isincome = $4 WHERE envelope_id = $1;'
+        await db.query(queryText, [newID, newName, newBudget, newIncomeCheck]);
+        res.status(200).send();
+    }
+});
+
 envRouter.use((err, req, res, next) => {
     console.log(err.message);
     res.status(err.status).send(err.message);
