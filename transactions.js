@@ -87,16 +87,22 @@ txnRouter.post('/', isValidTransaction, async (req, res, next) => {
         const queryText = 'INSERT INTO transactions VALUES ($1, $2, $3, $4, $5);'
         await db.query(queryText, [newID, newTarget, newDate, newPayee, newAmount]);
         
+        const incomeCheck = 'SELECT isincome FROM envelopes WHERE envelope_id = $1';
+        const {rows} = await db.query(incomeCheck, [newTarget]);
+        const targetIsIncome = rows[0].isincome;
+        console.log(targetIsIncome);
         // A new transaction should also change the current_value of the envelope with id wd_envelope_id
-        const updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
+        let updateQuery;
+                if(targetIsIncome){
+                    updateQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
+                } else {
+                    updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
+                }
         await db.query(updateQuery, [newAmount, newTarget]);
         
         transactions.push(newT);
         res.status(201).send(transactions);
     }
-
-    
-        
 });
 
 /* Do we even want PUT as an option? I don't want end user to be able to edit transactions directly. Admin should be able to. A future extension could introduce ADMIN MODE that allows more edits, but will also require more validation logic.
