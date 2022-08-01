@@ -8,7 +8,7 @@ CREATE TABLE envelopes (
 
 CREATE TABLE transactions (
     transaction_id integer PRIMARY KEY,
-    wd_envelope_id integer REFERENCES envelopes(envelope_id),
+    wd_envelope_id integer REFERENCES envelopes(envelope_id) ON DELETE CASCADE,
     transaction_date date,
     payment_recipient varchar(14),
     payment_amount float

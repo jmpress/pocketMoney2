@@ -80,23 +80,22 @@ envRouter.post('/', isValidEnvelope, async (req, res, next) => {
 
 //Needs some front-end work before I can test it.
 //Nothing here integrates with PSQL yet.
-envRouter.delete('/:id', (req, res, next) => {
-    req.isValid = false;
-    req.validReason = 'Invalid Envelope ID';
-    for(let i = 0; i < envelopes.length; i++){
-        if(envelopes[i].envelope_id === req.envelopeID){
-            req.isValid = true;
-            req.validReason = null;
-            req.targetIndex = i;
-            break;
-        }
-    }
+envRouter.delete('/:id', async (req, res, next) => {
+    const target = req.params.id;
+
+    //validate that target is an envelope that exists
+    req.isValid = envelopes.some(envelope => {
+        return envelope.envelope_id == target;
+    });
+    
     if(!req.isValid){
         res.status(404).send(req.validReason);
     } else {
-        //otherwise, remove it from the array (splice)        
-        envelopes.splice(req.targetIndex, 1);
-        res.status(200).send(envelopes);
+        //if it's a valid envelope that exists, then
+        const deleteQuery = 'DELETE FROM envelopes WHERE envelope_id = $1;';
+        const {rows} = await db.query(deleteQuery, [target]);
+
+        res.status(200).send();
     }
 
 });

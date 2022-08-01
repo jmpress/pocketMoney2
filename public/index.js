@@ -30,6 +30,7 @@ let headers = {
 //Button Assignment
     //Envelopes
     const makeNewEnvelopeButton = document.getElementById("makeNewEnvelopeButton");
+    const deleteAnEnvelopeButton = document.getElementById("deleteAnEnvelopeButton")
 
     //Transactions
     const makeNewTransactionButton = document.getElementById("makeNewTransactionButton")
@@ -75,9 +76,9 @@ function displayAllEnvelopes(){
     
     envelopes.forEach(envelope => {
         if(envelope.isincome){
-            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" type = "checkbox" value="${envelope.envelope_id}"></td>`;
+            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" class = "delEnvelope" type = "checkbox" value="${envelope.envelope_id}"></td>`;
         } else {
-            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" type = "checkbox" value="${envelope.envelope_id}"></td>`;
+            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" class = "delEnvelope" type = "checkbox" value="${envelope.envelope_id}"></td>`;
         }
         
     });
@@ -124,6 +125,37 @@ makeNewEnvelopeButton.addEventListener('click', async () =>{
     }
 });
 
+deleteAnEnvelopeButton.addEventListener('click', () =>{
+    var checkedElements = document.querySelectorAll(".delEnvelope:checked");
+    var checkedElementsValues = [];
+    
+    // loop through all checked elements
+    checkedElements.forEach(function(element) {
+        checkedElementsValues.push(element.value);
+    }); 
+
+    if(checkedElementsValues.length == 0)
+    	console.log('No items checked');
+    else
+    	checkedElementsValues.forEach(async (value) => {
+            await deleteEnvelope(value);
+        });
+});
+
+async function deleteEnvelope(value){
+    
+    const response = await fetch(`/envelopes/${value}`, {method: 'DELETE'}); //THIS LINE doesn't seem to be making the call properly
+    console.log(response.ok);
+    if(response.ok){
+        errorDisplayArea.innerHTML = "Deleted!"
+        getAllEnvelopes();
+        getAllTransactions();
+    } else {
+        errorDisplayArea.innerHTML = await response.text();
+    }
+}
+
+
 //Transactions
 makeNewTransactionButton.addEventListener('click', async () =>{
     const newTransaction = {
@@ -145,21 +177,6 @@ makeNewTransactionButton.addEventListener('click', async () =>{
 });
 
 /*
-async function deleteEnvelope(){
-    
-    console.log(this.value);  
-    const response = await fetch(`/envelopes?id=${this.value}`, {method: 'DELETE'});
-    
-    console.log(response.ok);
-    if(response.ok){
-        errorDisplayArea.innerHTML = "Deleted!"
-        envelopes = await response.json();
-        displayAllEnvelopes();     
-    } else {
-        errorDisplayArea.innerHTML = await response.text();
-    }
-}
-
 
 updateOneButton.addEventListener('click', async () =>{
     //Using input data from input fields, make a PUT request to update an envelope
