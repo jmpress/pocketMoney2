@@ -1,19 +1,3 @@
-/*
-Problems:
-* deletion interface: how to dynamically create the interactable aspect and still attach event handlers that read the target ID?
-
-* When you add a transaction, it should subtract the value from the appropriate envelope.
-* Adding a transaction is how you update the current_value of an envelope.
-* Any other envelope attributes that need to be changed, must delete envelope and recreate it?
-
-ADMIN MODE
-* A toggle with a simple password that unhides a bunch of UI elements for more specific editing.
-* When you delete an envelope, what happens to all the transactions that relied on that envelope?
-* When you delete a transaction, should it add that value back in? Probably
-* ADMIN MODE could allow for envelope attribute updating
-
-*/
-
 //Fetch variables
 let headers = {
     'Accept': 'application/json',
@@ -22,7 +6,6 @@ let headers = {
 
 //Display Areas
     const expenseDisplayArea = document.getElementById("expenseDisplayArea");
-    const incomeDisplayArea = document.getElementById("incomeDisplayArea");
     const errorDisplayArea = document.getElementById("errorDisplayArea");
     const transactionDisplayArea = document.getElementById("transactionDisplayArea");
     const buttonUIArea = document.getElementById("buttonUIArea");
@@ -43,7 +26,6 @@ let headers = {
     const newEnvelopeID = document.getElementById("newEnvelopeID");
     const newEnvelopeName = document.getElementById("newEnvelopeName")
     const newEnvelopeBudget = document.getElementById("newEnvelopeBudget")
-    const newIsIncome = document.getElementById("newIsIncome")
     //Transactions
     const newTransactionID = document.getElementById("newTransactionID");
     const newTransactionEnvelope = document.getElementById("newTransactionEnvelope");
@@ -74,20 +56,12 @@ async function getAllTransactions(){
 
 //Display all Envelopes and Transactions
 function displayAllEnvelopes(){
-    let displayIncomeEnvelopes = "Income<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th><th>Delete</th></tr>";
     let displayExpenseEnvelopes = "Expenses<br><table><tr><th>ID</th><th>Name</th><th>Current Value</th><th>Budgeted Value</th><th>Delete</th></tr>";
     
     envelopes.forEach(envelope => {
-        if(envelope.isincome){
-            displayIncomeEnvelopes = displayIncomeEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" class = "delEnvelope" type = "checkbox" value="${envelope.envelope_id}"></td>`;
-        } else {
-            displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" class = "delEnvelope" type = "checkbox" value="${envelope.envelope_id}"></td>`;
-        }
-        
+        displayExpenseEnvelopes = displayExpenseEnvelopes + `<tr><td>${envelope.envelope_id}</td><td>${envelope.envelope_name}</td><td>${envelope.current_value}</td><td>${envelope.budgeted_value}</td><td><input id="checkDelete" class = "delEnvelope" type = "checkbox" value="${envelope.envelope_id}"></td>`;
     });
-    displayIncomeEnvelopes += "</table>";
     displayExpenseEnvelopes += "</table>";
-    incomeDisplayArea.innerHTML=displayIncomeEnvelopes;
     expenseDisplayArea.innerHTML=displayExpenseEnvelopes;   
 }
 
@@ -115,8 +89,7 @@ makeNewEnvelopeButton.addEventListener('click', async () =>{
         envelope_id: newEnvelopeID.value,
         envelope_name: newEnvelopeName.value,
         current_value: 0,
-        budgeted_value: newEnvelopeBudget.value,
-        isincome: newIsIncome.checked
+        budgeted_value: newEnvelopeBudget.value
     };
     const response = await fetch(`/envelopes`, {method: 'POST', headers: headers, body: JSON.stringify(newEnvelope)});
     if(response.ok){
@@ -165,8 +138,7 @@ updateEnvelopeValues.addEventListener('click', async () =>{
         envelope_id: newEnvelopeID.value,
         envelope_name: newEnvelopeName.value,
         current_value: null,
-        budgeted_value: newEnvelopeBudget.value,
-        isincome: newIsIncome.checked
+        budgeted_value: newEnvelopeBudget.value
     };
     const response = await fetch(`/envelopes/${value}`, {method: 'PUT', headers: headers, body: JSON.stringify(newEnvelope)});
     if(response.ok){

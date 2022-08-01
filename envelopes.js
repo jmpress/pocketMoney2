@@ -11,7 +11,6 @@ const envelopes = [];
     envelope_name: string,  - the name used to label the envelope
     current_value: number,  - represents how much money is actually in this envelope
     budgeted_value: number,  - represents the total dollar amount budgeted for this envelope
-    isincome: boolean       - Is this income? If not, it's an expense
 }
 
 */
@@ -23,7 +22,6 @@ function isValidEnvelope(req, res, next){
     req.envelopeName = req.body.envelope_name;
     req.envelopeCurrentValue = req.body.current_value;
     req.envelopeBudgetedValue = req.body.budgeted_value
-    req.isIncome = req.body.isincome;
     //What's the actual logic to validate an envelope object
     //Assume true:
         req.isValid = true;
@@ -32,9 +30,6 @@ function isValidEnvelope(req, res, next){
             req.isValid = false;
             req.validReason = 'Budgeted amount must be a positive number.'
         }
-
-    //make sure isincome has a value
-        if(req.isIncome === undefined){req.isValid = false;req.validReason='Highly Unlikely'}
 
     //Make sure the ID isn't already taken
     //Make sure the name isn't aleady taken
@@ -70,9 +65,8 @@ envRouter.post('/', isValidEnvelope, async (req, res, next) => {
         const newName = newE.envelope_name;
         const newValue = newE.current_value;
         const newBudget = newE.budgeted_value;
-        const newIncomeCheck = newE.isincome;
-        const queryText = 'INSERT INTO envelopes VALUES ($1, $2, $3, $4, $5);'
-        const result = await db.query(queryText, [newID, newName, newValue, newBudget, newIncomeCheck]);
+        const queryText = 'INSERT INTO envelopes VALUES ($1, $2, $3, $4);'
+        const result = await db.query(queryText, [newID, newName, newValue, newBudget]);
         envelopes.push(newE);
         res.status(201).send(envelopes);
     }
@@ -108,9 +102,8 @@ envRouter.put('/:id', isValidEnvelope, async (req, res, next) => {
         const newName = newE.envelope_name;
         const newValue = newE.current_value;
         const newBudget = newE.budgeted_value;
-        const newIncomeCheck = newE.isincome;
-        const queryText = 'UPDATE envelopes SET envelope_name = $2, budgeted_value = $3, isincome = $4 WHERE envelope_id = $1;'
-        await db.query(queryText, [newID, newName, newBudget, newIncomeCheck]);
+        const queryText = 'UPDATE envelopes SET envelope_name = $2, budgeted_value = $3 WHERE envelope_id = $1;'
+        await db.query(queryText, [newID, newName, newBudget]);
         res.status(200).send();
     }
 });
@@ -121,24 +114,3 @@ envRouter.use((err, req, res, next) => {
 })
 
 module.exports = envRouter;
-
-
-/*
-//ADMIN MODE - redo this whole thing
-//So far the only UPDATING that can be done to an envelope is updating the balance when a new transaction is added.
-envRouter.put('/', isValidEnvelope, (req, res, next) => {
-    if(req.index === -1){
-        res.status(404).send();
-    } else {
-        envelopes[req.index].current_value += Number(req.targetBudget);
-        if(envelopes[req.index].current_value > envelopes[req.index].budgeted_value){
-            envelopes[req.index].current_value = envelopes[req.index].budgeted_value;
-        }
-        if(envelopes[req.index].current_value < 0){
-            envelopes[req.index].current_value = 0;
-        }
-        
-        res.status(200).send(envelopes);
-    }
-});
-*/

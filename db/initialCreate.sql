@@ -2,8 +2,7 @@ CREATE TABLE envelopes (
     envelope_id integer PRIMARY KEY,
     envelope_name varchar(14) UNIQUE NOT NULL,
     current_value float,
-    budgeted_value float,
-    isIncome boolean
+    budgeted_value float
 );
 
 CREATE TABLE transactions (
