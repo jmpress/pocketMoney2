@@ -90,7 +90,6 @@ txnRouter.post('/', isValidTransaction, async (req, res, next) => {
         const incomeCheck = 'SELECT isincome FROM envelopes WHERE envelope_id = $1';
         const {rows} = await db.query(incomeCheck, [newTarget]);
         const targetIsIncome = rows[0].isincome;
-        console.log(targetIsIncome);
         // A new transaction should also change the current_value of the envelope with id wd_envelope_id
         let updateQuery;
                 if(targetIsIncome){
@@ -116,22 +115,43 @@ txnRouter.put('/', isValidTransaction, (req, res, next) => {
     }
 });
 */
+//Works as expected
+txnRouter.delete('/:id', async (req, res, next) => {
+    const target = req.params.id;
+    let affEnv; 
+    let changeAmount;
 
-txnRouter.delete('/', isValidTransaction, (req, res, next) => {
+    //validate that target is a transaction that exists
+    req.isValid = transactions.some(transaction => {
+        if(transaction.transaction_id == target){
+            affEnv = transaction.wd_envelope_id;
+            changeAmount = transaction.payment_amount;
+            return true;
+        } else {return false;}
+    });
+    
     if(!req.isValid){
         res.status(404).send(req.validReason);
     } else {
-        //otherwise, remove it from the array (splice)
-        let deletionTargetIndex = -1;
-        for(let i = 0; i < transactions.length; i++){
-            if(transactions[i].transaction_id === req.transactionID){
-                deletionTargetIndex = i;
-                break;
-            }
-        }        
+        //if it's a valid transaction that exists, then
+        //Deletion Query
+        const deleteQuery = 'DELETE FROM transactions WHERE transaction_id = $1;';
+        await db.query(deleteQuery, [target]);
 
-        transactions.splice(deletionTargetIndex, 1);
-        res.status(200).send(transactions);    
+        //Now change the balance of the envelope back
+        const incomeCheck = 'SELECT isincome FROM envelopes WHERE envelope_id = $1';
+        const {rows} = await db.query(incomeCheck, [affEnv]);
+        const targetIsIncome = rows[0].isincome;
+        // A new transaction should also change the current_value of the envelope with id wd_envelope_id
+        let updateQuery;
+                if(targetIsIncome){
+                    updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
+                } else {
+                    updateQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
+                }
+        await db.query(updateQuery, [changeAmount, affEnv]);
+
+        res.status(200).send();
     }
 });
 

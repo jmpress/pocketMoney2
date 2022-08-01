@@ -78,8 +78,7 @@ envRouter.post('/', isValidEnvelope, async (req, res, next) => {
     }
 });
 
-//Needs some front-end work before I can test it.
-//Nothing here integrates with PSQL yet.
+//Seems to work as expected.
 envRouter.delete('/:id', async (req, res, next) => {
     const target = req.params.id;
 
@@ -93,11 +92,10 @@ envRouter.delete('/:id', async (req, res, next) => {
     } else {
         //if it's a valid envelope that exists, then
         const deleteQuery = 'DELETE FROM envelopes WHERE envelope_id = $1;';
-        const {rows} = await db.query(deleteQuery, [target]);
+        await db.query(deleteQuery, [target]);
 
         res.status(200).send();
     }
-
 });
 
 envRouter.use((err, req, res, next) => {
@@ -110,7 +108,7 @@ module.exports = envRouter;
 
 /*
 //ADMIN MODE - redo this whole thing
-
+//So far the only UPDATING that can be done to an envelope is updating the balance when a new transaction is added.
 envRouter.put('/', isValidEnvelope, (req, res, next) => {
     if(req.index === -1){
         res.status(404).send();

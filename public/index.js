@@ -31,6 +31,7 @@ let headers = {
     //Envelopes
     const makeNewEnvelopeButton = document.getElementById("makeNewEnvelopeButton");
     const deleteAnEnvelopeButton = document.getElementById("deleteAnEnvelopeButton")
+    const deleteTransactionButton = document.getElementById("deleteTransactionButton")
 
     //Transactions
     const makeNewTransactionButton = document.getElementById("makeNewTransactionButton")
@@ -89,10 +90,10 @@ function displayAllEnvelopes(){
 }
 
 function displayAllTransactions(){
-    let displayTransactions = "<table><tr><th>Txn</th><th>Amount</th><th>From Env</th><th>Paid to</th><th>Date</th></tr>";
+    let displayTransactions = "<table><tr><th>Txn</th><th>Amount</th><th>From Env</th><th>Paid to</th><th>Date</th><th>Delete</th></tr>";
     
     transactions.forEach(transaction => {
-        displayTransactions = displayTransactions + `<tr><div id="transaction${transaction.transaction_id}"><td>${transaction.transaction_id}</td><td>${transaction.payment_amount}</td><td>${transaction.wd_envelope_id}</td><td>${transaction.payment_recipient}</td><td>${transaction.transaction_date}</td></tr>`;
+        displayTransactions = displayTransactions + `<tr><div id="transaction${transaction.transaction_id}"><td>${transaction.transaction_id}</td><td>${transaction.payment_amount}</td><td>${transaction.wd_envelope_id}</td><td>${transaction.payment_recipient}</td><td>${transaction.transaction_date}</td><td><input id="checkDelete" class = "delTrans" type = "checkbox" value="${transaction.transaction_id}"></td></tr>`;
     });
     displayTransactions += '</table>';
     transactionDisplayArea.innerHTML=displayTransactions;   
@@ -144,7 +145,7 @@ deleteAnEnvelopeButton.addEventListener('click', () =>{
 
 async function deleteEnvelope(value){
     
-    const response = await fetch(`/envelopes/${value}`, {method: 'DELETE'}); //THIS LINE doesn't seem to be making the call properly
+    const response = await fetch(`/envelopes/${value}`, {method: 'DELETE'});
     console.log(response.ok);
     if(response.ok){
         errorDisplayArea.innerHTML = "Deleted!"
@@ -175,6 +176,36 @@ makeNewTransactionButton.addEventListener('click', async () =>{
         errorDisplayArea.innerHTML = await response.text();
     }
 });
+
+deleteTransactionButton.addEventListener('click', () =>{
+    var checkedElements = document.querySelectorAll(".delTrans:checked");
+    var checkedElementsValues = [];
+    
+    // loop through all checked elements
+    checkedElements.forEach(function(element) {
+        checkedElementsValues.push(element.value);
+    }); 
+
+    if(checkedElementsValues.length == 0)
+    	console.log('No items checked');
+    else
+    	checkedElementsValues.forEach(async (value) => {
+            await deleteTransaction(value);
+        });
+});
+
+async function deleteTransaction(value){
+    
+    const response = await fetch(`/transactions/${value}`, {method: 'DELETE'});
+    console.log(response.ok);
+    if(response.ok){
+        errorDisplayArea.innerHTML = "Deleted!"
+        getAllTransactions();
+        getAllEnvelopes();
+    } else {
+        errorDisplayArea.innerHTML = await response.text();
+    }
+}
 
 /*
 
