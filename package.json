@@ -1,0 +1,20 @@
+{
+  "name": "pocketmoney2",
+  "version": "1.0.0",
+  "description": "An tool for Envelope Budgeting",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmpress/pocketMoney2.git"
+  },
+  "author": "Jeffrey M. Press",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jmpress/pocketMoney2/issues"
+  },
+  "homepage": "https://github.com/jmpress/pocketMoney2#readme"
+}
