@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
-const _dirname = '/home/jeff/projects/pocketMoney2/'
+const _dirname = './'
 module.exports = app;
 
 // Set localHost port to listen at
