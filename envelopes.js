@@ -3,6 +3,7 @@ const db = require('./db')
 const Router = require('express-promise-router');
 const envRouter = new Router();
 
+//Internal Data Structure for holding Envelope objects.
 const envelopes = [];
 
 /* Envelope object definition:

@@ -11,6 +11,8 @@ let headers = {
     const buttonUIArea = document.getElementById("buttonUIArea");
 
 //Button Assignment
+    //Paycheck
+    const payCheckInput = document.getElementById("payCheckInput");
     //Envelopes
     const makeNewEnvelopeButton = document.getElementById("makeNewEnvelopeButton");
     const deleteAnEnvelopeButton = document.getElementById("deleteAnEnvelopeButton");
@@ -19,13 +21,15 @@ let headers = {
     const updateTransactionValues = document.getElementById("updateTransactionValues");
 
     //Transactions
-    const makeNewTransactionButton = document.getElementById("makeNewTransactionButton")
+    const makeNewTransactionButton = document.getElementById("makeNewTransactionButton");
 
 //Text Field Assignment
+    //Paycheck
+    const payCheck = document.getElementById("payCheck");
     //Envelopes
     const newEnvelopeID = document.getElementById("newEnvelopeID");
-    const newEnvelopeName = document.getElementById("newEnvelopeName")
-    const newEnvelopeBudget = document.getElementById("newEnvelopeBudget")
+    const newEnvelopeName = document.getElementById("newEnvelopeName");
+    const newEnvelopeBudget = document.getElementById("newEnvelopeBudget");
     //Transactions
     const newTransactionID = document.getElementById("newTransactionID");
     const newTransactionEnvelope = document.getElementById("newTransactionEnvelope");
@@ -36,6 +40,7 @@ let headers = {
 // Object collection arrays
     let envelopes = [];
     let transactions = [];
+    let paycheckDistro = [];
 
 // Functions to Get Envelopes and Transactions
 async function getAllEnvelopes(){
@@ -82,6 +87,47 @@ function displayAllTransactions(){
     displayAllTransactions();
 
 //Event Listeners
+
+//Paychecks
+payCheckInput.addEventListener('click', async ()=> {
+    const income = payCheck.value;
+    let totalBudget = 0;    //all dollars budgeted = 100% of the paycheck
+    let maxID = 0;  //The highest transaction ID number, so we can insert new transactions starting 1 above that.
+    
+    for(let i = 0; i < envelopes.length; i++){
+        totalBudget += envelopes[i].budgeted_value;
+        
+    }
+    
+    for(let l = 0; l < transactions.length; l++){
+        if(transactions[l].transaction_id > maxID) { 
+            maxID = transactions[l].transaction_id; 
+        }
+    }
+
+    for(let j = 0; j < envelopes.length; j++){
+        //paycheckDistro[x] is assigned a % of the income in proportion to envelope[x] % of the total budget
+        paycheckDistro[j] = income * (Math.round((envelopes[j].budgeted_value / totalBudget)*100)/100);
+    }
+    
+    for(let k = 0; k < paycheckDistro.length; k++){
+        const payCheckSplit = {
+            transaction_id: maxID+k+1,
+            wd_envelope_id: envelopes[k].envelope_id,
+            transaction_date: '2020-01-01',  //replace this with today's actual date function
+            payment_recipient: 'Income',
+            payment_amount: -paycheckDistro[k]
+        };
+        const response = await fetch(`/transactions`, {method: 'POST', headers: headers, body: JSON.stringify(payCheckSplit)});
+        if(response.ok){
+
+        } else {
+            errorDisplayArea.innerHTML = await response.text();
+        }
+    }
+    getAllTransactions();
+    getAllEnvelopes();
+});
 
 //Envelopes
 makeNewEnvelopeButton.addEventListener('click', async () =>{

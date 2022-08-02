@@ -3,12 +3,13 @@ const db = require('./db');
 const Router = require('express-promise-router');
 const txnRouter = new Router();
 
+//Internal Data Structure for holding Transaction objects.
 const transactions = [];
 
 /* Transaction object definition:
 {
     transaction_id: 0,
-    wd_envelope_id: 1,
+    wd_envelope_id: 1,   //imagine a corresponding envelope object with envelope_id: 1 named "Rent"
     transaction_date: '2020-09-01',
     payment_recipient: 'Landlord',
     payment_amount: 1000
@@ -29,11 +30,12 @@ function isValidTransaction(req, res, next){
     //Assume true:
     req.isValid = true;
 
-    //Make sure transaction amount > 0
+    /*Does this actually need to be true? Harder to pass in addition transactions with this in play.
+    Make sure transaction amount > 0
     if(req.amount<=0){
         req.isValid = false;
         req.validReason = 'Amount must be a positive number.'
-    }
+    }*/
 
     //make sure Payee has a value
     if(req.payee === undefined || req.payee === null){req.isValid = false;req.validReason='Payee required.'}
