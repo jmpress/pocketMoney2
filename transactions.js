@@ -73,6 +73,7 @@ txnRouter.get('/', async (req, res, next) => {
     res.status(200).send(transactions);
 });
 
+//Working
 txnRouter.post('/', isValidTransaction, async (req, res, next) => {
     if(!req.isValid){
         res.status(400).send(req.validReason);
@@ -154,19 +155,22 @@ txnRouter.put('/:id', async (req, res, next) => {
 
         //Handling balance changes between envelopes
         if(oldT.wd_envelope_id != newTarget){
-        //different envelopes, two balance changes. This should also handle cases where the amount changes as well.
+        //different envelopes, two balance changes. 
+        //This naturally handles cases where the amount of the transaction is also being updated as well.
             //First change old envelope back
             const updateOldQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
             await db.query(updateOldQuery, [oldT.payment_amount, oldT.wd_envelope_id]);
             //Second change new envelope to compensate
             const updateNewQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';
             await db.query(updateNewQuery, [newAmount, newTarget]);
+
         } else if(oldT.payment_amount != newAmount){
         //Case when envelope is the same, but amount changes.
             //calculate difference
             const diff = (oldT.payment_amount - newAmount);
             //Query database and current_value = current_value - diff; or something to that effect
-            
+            const amtQuery = 'UPDATE envelopes SET current_value = current_value + $1 WHERE envelope_id = $2';
+            await db.query(amtQuery, [diff, newTarget]);
         }
 
         res.status(200).send();
