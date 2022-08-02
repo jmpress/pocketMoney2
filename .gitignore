@@ -1,3 +1,4 @@
 db/examples.sql
 .env
 nextSteps.txt
+node_modules/
