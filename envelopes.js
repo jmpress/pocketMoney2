@@ -19,27 +19,70 @@ const envelopes = [];
 //Checks the validity of an envelope
 //Works for proper values - needs testing for incorrect/missing values
 function isValidEnvelope(req, res, next){
-    req.envelopeID = req.body.envelope_id;
-    req.envelopeName = req.body.envelope_name;
-    req.envelopeCurrentValue = req.body.current_value;
-    req.envelopeBudgetedValue = req.body.budgeted_value
+        let {envelope_id, envelope_name, current_value, budgeted_value} = req.body;
+    
     //What's the actual logic to validate an envelope object
     //Assume true:
         req.isValid = true;
-    //Make sure budget > 0
-        if(req.envelopeBudgetedValue<=0){
+
+    //Validate envelope_id as a number > 0
+        envelope_id = parseInt(envelope_id, 10);
+        if(isNaN(envelope_id) || envelope_id < 0){
             req.isValid = false;
-            req.validReason = 'Budgeted amount must be a positive number.'
+            req.validReason = 'ID must be 0 or a positive number.'
+            next();
         }
 
-    //Make sure the ID isn't already taken
-    //Make sure the name isn't aleady taken
+    //Check and flag if the ID already exists or not.
         for(let i = 0; i < envelopes.length; i++){
-            if(envelopes[i].envelope_id === req.envelopeID || envelopes[i].envelope_name === req.envelopeName){
-                req.isValid = false;
-                req.validReason = 'ID or name already taken.'
+            if(envelopes[i].envelope_id === envelope_id){
+                req.IDMatch = true;
             }
         }
+
+    //current_value is not a user input value, it is always calculated from other input values.
+
+    //Make sure budget > 0
+        budgeted_value = parseInt(budgeted_value, 10);
+        if(budgeted_value<0 || isNaN(budgeted_value)){
+            req.isValid = false;
+            req.validReason = 'Budgeted amount must be a positive number.'
+            next();
+        }
+
+    //validate that Name is a string and exists
+        if(envelope_name === undefined || envelope_name === null || (typeof envelope_name != 'string')){
+            req.isValid = false;
+            req.validReason = 'Invalid envelope name.'
+            next();
+        }
+    
+    //Sanitize name string and truncate if necessary
+        envelope_name = envelope_name.replace(/[^a-z0-9áéíóúñü \.,_-]/gim,"");
+        envelope_name = envelope_name.trim();
+        if(envelope_name.length>14){
+            envelope_name = envelope_name.slice(0, 14);
+        }
+
+    //If it's a new envelope, make sure the name isn't aleady taken
+            for(let i = 0; i < envelopes.length; i++){
+                if(envelopes[i].envelope_name === envelope_name){
+                    if(!req.IDMatch){
+                        req.isValid = false;
+                        req.validReason = 'Name must be unique.'
+                        next();
+                    }
+                }
+            }
+
+        const fixedNewEnvelope = {
+            envelope_id,
+            envelope_name,
+            current_value,
+            budgeted_value
+        }
+
+        req.body = fixedNewEnvelope;
     //All done. If there's no reason for it to be false, isValid will still be true from instantiation.
     next();
 }
@@ -58,18 +101,18 @@ envRouter.get('/', async (req, res, next) => {
 
 //Works
 envRouter.post('/', isValidEnvelope, async (req, res, next) => {
+    if(req.IDMatch){
+        req.isValid = false; 
+        req.validReason = 'Must use a unique ID for new envelopes.'
+    }
     if(!req.isValid){
         res.status(400).send(req.validReason);
     } else{    
-        const newE = req.body;
-        const newID = newE.envelope_id;
-        const newName = newE.envelope_name;
-        const newValue = newE.current_value;
-        const newBudget = newE.budgeted_value;
+        newE = req.body;
         const queryText = 'INSERT INTO envelopes VALUES ($1, $2, $3, $4);'
-        const result = await db.query(queryText, [newID, newName, newValue, newBudget]);
+        await db.query(queryText, [newE.envelope_id, newE.envelope_name, newE.current_value, newE.budgeted_value]);
         envelopes.push(newE);
-        res.status(201).send(envelopes);
+        res.status(200).send(envelopes);
     }
 });
 
@@ -95,6 +138,10 @@ envRouter.delete('/:id', async (req, res, next) => {
 
 //PUT route to update values of an envelope
 envRouter.put('/:id', isValidEnvelope, async (req, res, next) => {
+    if(!req.IDMatch){ //valid envelope but ID doesn't match
+        req.isValid = false; 
+        req.validReason = 'ID does not exist yet. Make a new envelope with this ID before Updating it.'
+    }
     if(!req.isValid){
         res.status(400).send(req.validReason);
     } else {    

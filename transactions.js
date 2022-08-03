@@ -17,50 +17,78 @@ const transactions = [];
 */
 
 //Checks the validity of a transaction
-function isValidTransaction(req, res, next){
-    
-    req.transactionID = req.body.transaction_id;
-    req.wdEnvelopeID = req.body.wd_envelope_id;
-    req.date = req.body.transaction_date;
-    req.payee = req.body.payment_recipient;
-    req.amount = req.body.payment_amount;
-    
+async function isValidTransaction(req, res, next){
+        let {transaction_id, wd_envelope_id, transaction_date, payment_recipient, payment_amount} = req.body;
+
     //What's the actual logic to validate a transaction object
 
     //Assume true:
-    req.isValid = true;
+        req.isValid = true;
+        req.IDMatch = false;
 
-    /*Does this actually need to be true? Harder to pass in addition transactions with this in play.
-    Make sure transaction amount > 0
-    if(req.amount<=0){
-        req.isValid = false;
-        req.validReason = 'Amount must be a positive number.'
-    }*/
-
-    //make sure Payee has a value
-    if(req.payee === undefined || req.payee === null){req.isValid = false;req.validReason='Payee required.'}
-
-    //Make sure the ID isn't already taken
-    for(let i = 0; i < transactions.length; i++){
-        if(transactions[i].transaction_id === req.transactionID){
+    //Validate transaction_id as a number > 0
+        transaction_id = parseInt(transaction_id, 10);
+        if(isNaN(transaction_id) || transaction_id < 0){
             req.isValid = false;
-            req.validReason='Transaction ID must be Unique'
+            req.validReason = 'ID must be 0 or a positive number.'
+            next();
         }
-    }
+
+    //Check and flag if the transaction ID already exists or not.
+        for(let i = 0; i < transactions.length; i++){
+            if(transactions[i].transaction_id === transaction_id){
+                req.IDMatch = true;
+            }
+        }
+
+    //Validate wd_envelope_id as a number >0
+        wd_envelope_id = parseInt(wd_envelope_id, 10);
+        if(isNaN(wd_envelope_id) || wd_envelope_id < 0){
+            req.isValid = false;
+            req.validReason = 'Target Envelope ID must be 0 or a positive number.'
+            next();
+        }
+
+    //Check if the wd_envelope_id exists in database already
+        validEnvQuery = 'SELECT * FROM envelopes WHERE envelope_id = $1';
+        const {rows} = await db.query(validEnvQuery, [wd_envelope_id])
+        if(!rows[0]){
+            req.isValid = false;
+            req.validReason = 'No envelope with that ID exists.'
+            next();
+        }
+
+    //make sure Payee has a clean string value
+        if(payment_recipient === undefined || payment_recipient === null || (typeof payment_recipient != 'string')){
+            payment_recipient = 'Unknown';
+        } else {
+
+    //Sanitize Payee string and truncate if necessary
+            payment_recipient = payment_recipient.replace(/[^a-z0-9áéíóúñü \.,_-]/gim,"");
+            payment_recipient = payment_recipient.trim();
+            if(payment_recipient.length>14){
+                payment_recipient = payment_recipient.slice(0, 14);
+            }
+        }
 
     //validate Date format
+    const validatePattern = /^(\d{4})(\/|-)(\d{1,2})(\/|-)(\d{1,2})$/;
+    const dateVal = transaction_date.match(validatePattern);
+    if(!dateVal){
+        req.isValid = false;
+        req.validReason = 'Invalid date format';
+        next();
+    }
 
-    //Make sure the envelope ID exists
-    //I'm already in the back-end...just include the envelopes table in the SQL query.
-    //for now, assume it's a valid envelope ID.
-
-
-    //Make sure the current_value of that envelope is greater than or equal to req.amount
-    //This validation might belong in the function that actually does the math to subtract the two as well.
-    //Actually maybe that should all go here...?
-    
-
-    next();
+        const fixedNewTransaction = {
+            transaction_id,
+            wd_envelope_id,
+            transaction_date,
+            payment_recipient,
+            payment_amount
+        }
+        req.body = fixedNewTransaction;
+        next();
 }
 
 
@@ -77,22 +105,21 @@ txnRouter.get('/', async (req, res, next) => {
 
 //Working
 txnRouter.post('/', isValidTransaction, async (req, res, next) => {
+    if(req.IDMatch){
+        req.isValid = false; 
+        req.validReason = 'Must use a unique ID for new transactions.'
+    }
     if(!req.isValid){
         res.status(400).send(req.validReason);
     } else {
         const newT = req.body;
-        const newID = newT.transaction_id;
-        const newTarget = newT.wd_envelope_id;
-        const newDate = newT.transaction_date;
-        const newPayee = newT.payment_recipient;
-        const newAmount = newT.payment_amount;
         
         const queryText = 'INSERT INTO transactions VALUES ($1, $2, $3, $4, $5);'
-        await db.query(queryText, [newID, newTarget, newDate, newPayee, newAmount]);
+        await db.query(queryText, [newT.transaction_id, newT.wd_envelope_id, newT.transaction_date, newT.payment_recipient, newT.payment_amount]);
         
         // A new transaction should also change the current_value of the envelope with id wd_envelope_id
         const updateQuery = 'UPDATE envelopes SET current_value = current_value - $1 WHERE envelope_id = $2';        
-        await db.query(updateQuery, [newAmount, newTarget]);
+        await db.query(updateQuery, [newT.payment_amount, newT.wd_envelope_id]);
         
         transactions.push(newT);
         res.status(200).send(transactions);
@@ -131,11 +158,12 @@ txnRouter.delete('/:id', async (req, res, next) => {
 });
 
 //PUT route to update values of a transaction
-//isValidTransaction middleware causes issues here, because here I need to use the case where ID numbers do match.
-txnRouter.put('/:id', async (req, res, next) => {
-    req.isValid = true; //kludge until I come up with another validation method.
+txnRouter.put('/:id', isValidTransaction, async (req, res, next) => {
+    if(!req.IDMatch){ //valid transaction but ID doesn't match
+        req.isValid = false; 
+        req.validReason = 'ID does not exist yet. Make a new transaction with this ID before Updating it.'
+    }
     if(!req.isValid){
-        console.log(req.validReason);
         res.status(400).send(req.validReason);
     } else {    
         const newT = req.body;
