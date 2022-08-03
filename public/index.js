@@ -107,9 +107,19 @@ payCheckInput.addEventListener('click', async ()=> {
 
     for(let j = 0; j < envelopes.length; j++){
         //paycheckDistro[x] is assigned a % of the income in proportion to envelope[x] % of the total budget
-        paycheckDistro[j] = income * (Math.round((envelopes[j].budgeted_value / totalBudget)*100)/100);
+        paycheckDistro[j] = income * (envelopes[j].budgeted_value / totalBudget);
+        paycheckDistro[j] = Math.round(paycheckDistro[j]*100)/100;
+        console.log(paycheckDistro[j]);
     }
     
+//Test balance splitting
+    let sum = 0;
+    for(let counter = 0; counter < envelopes.length; counter++){
+        sum += paycheckDistro[counter];
+    }
+    console.log(`Total Budget: ${totalBudget} Paycheck Sum: ${sum}`);
+//End Test    
+
     for(let k = 0; k < paycheckDistro.length; k++){
         const payCheckSplit = {
             transaction_id: maxID+k+1,
