@@ -1,7 +1,7 @@
 # pocketMoney2.0
 ## An upgraded implementation of Envelope Budgeting principles.
 
-This is an exercise in writing an Express API that handles database operations for a PostgreSQL server via  HTTP requests from a simple HTML/CSS/JS front-end. 
+This is an exercise in writing a RESTful Express API that handles database operations for a PostgreSQL server via  HTTP requests from a simple HTML/CSS/JS front-end. 
 
 ### Installation and Set-up
 Please Note: Instructions for installing Node, Node modules, Express, or PostreSQL are beyond the scope of this document.
